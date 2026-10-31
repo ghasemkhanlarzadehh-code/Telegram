@@ -1,4 +1,4 @@
-name: Build Telegram APK
+name: Build Dastyar APK v2
 
 on:
   workflow_dispatch:
@@ -19,8 +19,10 @@ jobs:
 
       - name: Install SDK, NDK and CMake
         run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;27.2.12479018" "cmake;3.22.1"
+          SDKM=$(ls $ANDROID_HOME/cmdline-tools/*/bin/sdkmanager | head -n 1)
+          echo "Using $SDKM"
+          yes | $SDKM --licenses > /dev/null || true
+          $SDKM "platforms;android-36" "build-tools;36.0.0" "ndk;27.2.12479018" "cmake;3.22.1"
 
       - name: Set api_id and api_hash
         run: |
