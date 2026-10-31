@@ -1,0 +1,41 @@
+name: Build Telegram APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install NDK and build tools
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager "platform-tools" "cmake;3.22.1"
+
+      - name: Set api_id and api_hash
+        run: |
+          F=TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
+          sed -i -E "s/APP_ID = [0-9]+;/APP_ID = ${{ secrets.TG_APP_ID }};/" $F
+          sed -i -E "s/APP_HASH = \"[0-9a-f]+\";/APP_HASH = \"${{ secrets.TG_APP_HASH }}\";/" $F
+
+      - name: Build debug APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: telegram-apk
+          path: "**/build/outputs/apk/**/*.apk"
